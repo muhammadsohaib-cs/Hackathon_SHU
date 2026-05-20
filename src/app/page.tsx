@@ -361,7 +361,7 @@ export default function Dashboard() {
           <Globe size={24} style={{ color: 'var(--primary-accent)' }} />
           Global Climate Data Hub
         </div>
-        
+        {/* example */}
         {/* Dataset Toggle */}
         <div style={{ display: 'flex', background: 'var(--bg-color)', borderRadius: '20px', padding: '4px', border: '1px solid var(--border-color)', marginRight: '20px' }}>
           <button 
