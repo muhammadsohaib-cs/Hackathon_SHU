@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Database, Terminal, AlertTriangle, ShieldCheck, RefreshCw, Download, Search, Globe, ChevronLeft, ChevronRight, Sprout, Snowflake, Cpu, Activity } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area, ComposedChart, Legend } from 'recharts';
 import glacierDataset from './data.json';
 import cropDataset from './crops_data.json';
 
@@ -55,29 +56,30 @@ cropDataset.forEach((d: any, index: number) => {
 export default function Dashboard() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
-  
+
   const [mode, setMode] = useState<'glaciers' | 'crops'>('glaciers');
   const modeRef = useRef(mode);
-  
-  const [logs, setLogs] = useState<Array<{time: string, msg: string, type: 'info'|'warn'|'error'}>>([]);
+
+  const [logs, setLogs] = useState<Array<{ time: string, msg: string, type: 'info' | 'warn' | 'error' }>>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
-  
+
   const [activeGlacierId, setActiveGlacierId] = useState<string>(Object.keys(GLACIERS)[0] || '');
   const [activeCropId, setActiveCropId] = useState<string>(Object.keys(CROPS)[0] || '');
-  
+
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
 
   // ML Form State
-  const [mlInputs, setMlInputs] = useState({ tempIncrease: 1.5, rainfallChange: 0, droughtSeverity: 'Moderate', heatwaveSeverity: 'Moderate' });
+  const [mlInputs, setMlInputs] = useState({ item: 'Wheat', year: 2026, avg_rainfall: 500, pesticides: 1000, avg_temp: 22.5 });
   const [mlPrediction, setMlPrediction] = useState<any>(null);
+  const [isPredicting, setIsPredicting] = useState(false);
 
   // Keep refs for map callbacks
   const handleMapClickRef = useRef<((id: string) => void) | null>(null);
 
   useEffect(() => { modeRef.current = mode; }, [mode]);
 
-  const addLog = (msg: string, type: 'info'|'warn'|'error' = 'info') => {
+  const addLog = (msg: string, type: 'info' | 'warn' | 'error' = 'info') => {
     setLogs(prev => [{ time: new Date().toLocaleTimeString(), msg, type }, ...prev].slice(0, 15));
   };
 
@@ -91,18 +93,20 @@ export default function Dashboard() {
       setActiveCropId(id);
       region = CROPS[id];
       if (region) {
-        setMlInputs({ 
-          tempIncrease: 1.5, 
-          rainfallChange: 0, 
-          droughtSeverity: region.baseline.droughtRisk || 'Moderate', 
-          heatwaveSeverity: region.baseline.heatwaveRisk || 'Moderate' 
+        setMlInputs({
+          item: region.baseline.crops ? region.baseline.crops.split(',')[0].trim() : 'Wheat',
+          year: 2026,
+          avg_rainfall: region.baseline.rainfall || 500,
+          pesticides: 1000,
+          avg_temp: 22.5
         });
+        setMlPrediction(null);
       }
     }
-    
+
     if (!region) return;
     addLog(`Focus shifted to ${region.name}.`, 'info');
-    
+
     if (map.current) {
       map.current.flyTo({ center: region.coords as [number, number], zoom: region.zoom, pitch: 45, duration: 2500 });
     }
@@ -118,150 +122,61 @@ export default function Dashboard() {
     selectRegion(e.target.value);
   };
 
-  // Instant Scientific Agro-ecological ML Prediction model
-  useEffect(() => {
-    if (mode === 'crops') {
-      const activeId = activeCropId || Object.keys(CROPS)[0];
-      if (!activeCropId && activeId) {
-        setActiveCropId(activeId);
-      }
-      
-      const region = CROPS[activeId];
-      if (!region) return;
-      
-      // 1. Parse individual major crops to apply crop-specific IPCC/FAO sensitivity coefficients
-      const cropList = region.baseline.crops.split(',').map((c: string) => c.trim().toLowerCase());
-      
-      // Crop sensitivities derived from Zhao et al. (2017) and FAO empirical data (% yield loss per 1°C increase)
-      const sensitivities: Record<string, number> = {
-        wheat: 6.0,
-        maize: 7.4,
-        corn: 7.4,
-        rice: 3.2,
-        soybeans: 3.1,
-        soybean: 3.1,
-        barley: 5.0,
-        sugarcane: 2.5,
-        grapes: 4.5,
-        sunflower: 3.8,
-        oats: 4.2,
-        potatoes: 4.0,
-        potato: 4.0,
-        bananas: 3.5,
-        banana: 3.5,
-        cotton: 5.5,
-        tea: 3.0,
-        coffee: 6.5,
-        olives: 3.2,
-        tomatoes: 4.8,
-        lentils: 3.9
+  const handlePredict = async () => {
+    const activeId = activeCropId || Object.keys(CROPS)[0];
+    const region = CROPS[activeId];
+    if (mode !== 'crops' || !region) return;
+    
+    setIsPredicting(true);
+    addLog(`Running full AI Yield Prediction for ${region.name}...`, 'info');
+    
+    try {
+      const payload = {
+        Area: region.name,
+        Item: mlInputs.item,
+        Year: mlInputs.year,
+        average_rain_fall_mm_per_year: mlInputs.avg_rainfall,
+        pesticides_tonnes: mlInputs.pesticides,
+        avg_temp: mlInputs.avg_temp
       };
-
-      let avgTempSensitivity = 0;
-      let count = 0;
-      cropList.forEach((crop: string) => {
-        // Find matching crop sensitivity or use fallback
-        let sens = 4.0; // standard fallback sensitivity for general crops
-        for (const [key, val] of Object.entries(sensitivities)) {
-          if (crop.includes(key)) {
-            sens = val;
-            break;
-          }
-        }
-        avgTempSensitivity += sens;
-        count++;
+      
+      const res = await fetch('http://localhost:8867/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
-      avgTempSensitivity = count > 0 ? avgTempSensitivity / count : 4.0;
-
-      // 2. Temperature Damage
-      const tempLoss = mlInputs.tempIncrease * avgTempSensitivity;
-
-      // 3. Precipitation Stress Factor (Quadratic Water Stress Curve)
-      let rainLoss = 0;
-      const dP = mlInputs.rainfallChange;
-      if (dP < 0) {
-        // Drought deficit stress: highly non-linear quadratic curve
-        rainLoss = 0.04 * Math.pow(dP, 2); 
-      } else if (dP > 0) {
-        // Waterlogging/excess moisture stress: gentler quadratic loss
-        rainLoss = 0.015 * Math.pow(dP, 2);
+      
+      const data = await res.json();
+      if (data.prediction) {
+        setMlPrediction(data.prediction);
+        addLog(`AI Models predicted crop yield successfully.`, 'info');
+      } else {
+        addLog(`Prediction failed: ${data.error || 'Unknown error'}`, 'error');
       }
-
-      // 4. Extreme Event Damage Multipliers (FAO Disaster Risk Assessments)
-      const droughtPenalties: Record<string, number> = { 'Low': 0, 'Moderate': 3, 'High': 9, 'Very High': 17, 'Extreme': 28 };
-      const heatwavePenalties: Record<string, number> = { 'Low': 0, 'Moderate': 4, 'High': 11, 'Very High': 20, 'Extreme': 32 };
-      
-      const droughtLoss = droughtPenalties[mlInputs.droughtSeverity] || 0;
-      const heatwaveLoss = heatwavePenalties[mlInputs.heatwaveSeverity] || 0;
-
-      // Compound Interaction Factor: Co-occurring extreme heat & drought amplifies damage non-linearly
-      let compoundLoss = 0;
-      const severeDrought = ['High', 'Very High', 'Extreme'].includes(mlInputs.droughtSeverity);
-      const severeHeat = ['High', 'Very High', 'Extreme'].includes(mlInputs.heatwaveSeverity);
-      if (severeDrought && severeHeat) {
-        compoundLoss = 6.0; // 6% compound penalty for simultaneous shocks
-      }
-
-      // Total Calculated Scientific Model Yield Loss
-      const modelYieldLoss = tempLoss + rainLoss + droughtLoss + heatwaveLoss + compoundLoss;
-
-      // 5. Bayesian Ensemble Blending: Blend the physical model predictions with the historical local empirical baseline
-      // This preserves local geographic calibration from your CSV while running realistic simulation physics.
-      const csvBaseLoss = region.baseline.baseYieldLoss;
-      
-      // Calculate deviation from baseline input settings to determine dynamic blending ratio
-      const isCloseToBaseline = Math.abs(mlInputs.tempIncrease - 1.5) < 0.2 && Math.abs(mlInputs.rainfallChange) < 5;
-      const blendFactor = isCloseToBaseline ? 0.6 : 0.25; // closer to baseline -> respect CSV more; heavy scenario -> respect physical model more
-      
-      let finalYieldLoss = (blendFactor * csvBaseLoss) + ((1 - blendFactor) * modelYieldLoss);
-      finalYieldLoss = Math.min(Math.max(finalYieldLoss, 0), 100);
-
-      // 6. Economic Impact Calculation (Agricultural GDP direct shock elasticity)
-      const baseEcoImpact = region.baseline.baseImpact;
-      const shockElasticity = 1.15; // standard economic multiplier for supply chain ripple effects
-      const yieldShockRatio = finalYieldLoss / (csvBaseLoss || 10);
-      let finalEcoImpact = baseEcoImpact * Math.pow(yieldShockRatio, shockElasticity);
-      // Fallback cap/floor to prevent mathematical singularities
-      finalEcoImpact = Math.min(Math.max(finalEcoImpact, baseEcoImpact * 0.2), baseEcoImpact * 4.5);
-
-      // Future risk classification matching standard IPCC warning systems
-      let futureRisk = "Moderate";
-      if (finalYieldLoss > 50) futureRisk = "Catastrophic Shocks Projected";
-      else if (finalYieldLoss > 35) futureRisk = "Critical High Risk";
-      else if (finalYieldLoss > 20) futureRisk = "Elevated Risk";
-
-      setMlPrediction({
-        yieldLoss: isNaN(finalYieldLoss) ? "0.0" : finalYieldLoss.toFixed(1),
-        ecoImpact: isNaN(finalEcoImpact) ? "0.00" : finalEcoImpact.toFixed(2),
-        futureRisk: futureRisk,
-        affected: region.baseline.affectedCrops,
-        breakdown: {
-          tempLoss: tempLoss.toFixed(1),
-          rainLoss: rainLoss.toFixed(1),
-          extremeLoss: (droughtLoss + heatwaveLoss + compoundLoss).toFixed(1),
-          avgSensitivity: avgTempSensitivity.toFixed(1)
-        }
-      });
+    } catch (err: any) {
+      addLog(`Failed to connect to AI Engine: ${err.message}`, 'error');
+    } finally {
+      setIsPredicting(false);
     }
-  }, [activeCropId, mlInputs, mode]);
+  };
 
   // Switch between Glaciers and Crops map layer
   useEffect(() => {
     if (!mapLoaded || !map.current) return;
-    
+
     const source: any = map.current.getSource('global-zones');
     if (!source) return;
 
     const dataObj = mode === 'glaciers' ? GLACIERS : CROPS;
     const features = Object.values(dataObj).map((r: any) => ({
       'type': 'Feature',
-      'properties': { 
-          'id': r.id,
-          'name': r.name,
-          'type': mode === 'glaciers' ? 'glacier-point' : 'crop-point', 
-          'intensity': mode === 'glaciers' 
-            ? (r.metrics.salStatus === 'critical' ? 'extreme' : r.metrics.salStatus === 'warning' ? 'high' : 'medium')
-            : (r.baseline.baseYieldLoss > 30 ? 'extreme' : r.baseline.baseYieldLoss > 15 ? 'high' : 'medium')
+      'properties': {
+        'id': r.id,
+        'name': r.name,
+        'type': mode === 'glaciers' ? 'glacier-point' : 'crop-point',
+        'intensity': mode === 'glaciers'
+          ? (r.metrics.salStatus === 'critical' ? 'extreme' : r.metrics.salStatus === 'warning' ? 'high' : 'medium')
+          : (r.baseline.baseYieldLoss > 30 ? 'extreme' : r.baseline.baseYieldLoss > 15 ? 'high' : 'medium')
       },
       'geometry': { 'type': 'Point', 'coordinates': r.coords }
     }));
@@ -281,14 +196,14 @@ export default function Dashboard() {
             'satellite': { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19 },
             'labels': { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19 }
           },
-          layers: [ { id: 'satellite-layer', type: 'raster', source: 'satellite' }, { id: 'labels-layer', type: 'raster', source: 'labels' } ]
+          layers: [{ id: 'satellite-layer', type: 'raster', source: 'satellite' }, { id: 'labels-layer', type: 'raster', source: 'labels' }]
         },
         center: [0, 20] as [number, number], zoom: 2, pitch: 0
       });
 
       map.current.on('style.load', () => {
         if (!map.current) return;
-        
+
         map.current.addSource('terrain-source', { 'type': 'raster-dem', 'tiles': ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], 'encoding': 'terrarium', 'tileSize': 256, 'maxzoom': 14 });
         map.current.setTerrain({ 'source': 'terrain-source', 'exaggeration': 1.5 });
 
@@ -318,14 +233,14 @@ export default function Dashboard() {
 
         map.current.on('click', 'points-layer', onFeatureClick);
         map.current.on('click', 'labels-layer-text', onFeatureClick);
-        
+
         map.current.on('mouseenter', 'points-layer', () => {
           if (map.current) map.current.getCanvas().style.cursor = 'pointer';
         });
         map.current.on('mouseleave', 'points-layer', () => {
           if (map.current) map.current.getCanvas().style.cursor = '';
         });
-        
+
         map.current.on('mouseenter', 'labels-layer-text', () => {
           if (map.current) map.current.getCanvas().style.cursor = 'pointer';
         });
@@ -364,13 +279,13 @@ export default function Dashboard() {
         {/* example */}
         {/* Dataset Toggle */}
         <div style={{ display: 'flex', background: 'var(--bg-color)', borderRadius: '20px', padding: '4px', border: '1px solid var(--border-color)', marginRight: '20px' }}>
-          <button 
+          <button
             onClick={() => setMode('glaciers')}
             style={{ padding: '6px 16px', borderRadius: '16px', border: 'none', background: mode === 'glaciers' ? 'var(--primary-accent)' : 'transparent', color: mode === 'glaciers' ? '#FFF' : 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             <Snowflake size={16} /> Glaciers
           </button>
-          <button 
+          <button
             onClick={() => setMode('crops')}
             style={{ padding: '6px 16px', borderRadius: '16px', border: 'none', background: mode === 'crops' ? '#10B981' : 'transparent', color: mode === 'crops' ? '#FFF' : 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
@@ -381,7 +296,7 @@ export default function Dashboard() {
         <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
           <div style={{ position: 'relative', width: '250px' }}>
             <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-            <select 
+            <select
               value={mode === 'glaciers' ? activeGlacierId : activeCropId}
               onChange={handleDropdownChange}
               style={{ width: '100%', padding: '8px 12px 8px 36px', borderRadius: '24px', border: '1px solid var(--border-color)', outline: 'none', appearance: 'none', background: 'var(--surface-color)', fontSize: '0.9rem', fontWeight: '500', color: 'var(--text-primary)', boxShadow: 'var(--shadow-sm)', cursor: 'pointer' }}
@@ -427,35 +342,50 @@ export default function Dashboard() {
           </>
         ) : (
           <>
-            <h2 className="panel-title"><Cpu size={18} color="#10B981" /> ML Input Variables</h2>
+            <h2 className="panel-title"><Cpu size={18} color="#10B981" /> AI Model Parameters</h2>
             {activeRegion && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ background: 'var(--primary-light)', padding: '12px', borderRadius: '8px', fontSize: '0.85rem' }}>
-                  <strong>Baseline Data for {activeRegion.name}:</strong><br/>
-                  Rainfall: {activeRegion.baseline.rainfall} mm<br/>
-                  Major Crops: {activeRegion.baseline.crops}
+                  <strong>Selected Area:</strong> {activeRegion.name}<br />
+                  <strong>Default Rainfall:</strong> {activeRegion.baseline.rainfall} mm
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Crop Item</label>
+                  <select value={mlInputs.item} onChange={(e) => setMlInputs({ ...mlInputs, item: e.target.value })} style={{ width: '100%', padding: '6px', borderRadius: '4px', background: 'var(--surface-color)', color: 'var(--text-primary)' }}>
+                    {activeRegion.baseline.crops.split(',').map((c: string) => (
+                      <option key={c.trim()} value={c.trim()}>{c.trim()}</option>
+                    ))}
+                    <option value="Maize">Maize</option>
+                    <option value="Wheat">Wheat</option>
+                    <option value="Rice">Rice</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Prediction Year: {mlInputs.year}</label>
+                  <input type="range" min="2020" max="2050" step="1" value={mlInputs.year} onChange={(e) => setMlInputs({ ...mlInputs, year: parseInt(e.target.value) })} style={{ width: '100%' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Avg Rainfall (mm/yr): {mlInputs.avg_rainfall}</label>
+                  <input type="range" min="0" max="3000" step="10" value={mlInputs.avg_rainfall} onChange={(e) => setMlInputs({ ...mlInputs, avg_rainfall: parseInt(e.target.value) })} style={{ width: '100%' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Pesticides (Tonnes): {mlInputs.pesticides}</label>
+                  <input type="range" min="0" max="100000" step="500" value={mlInputs.pesticides} onChange={(e) => setMlInputs({ ...mlInputs, pesticides: parseInt(e.target.value) })} style={{ width: '100%' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Avg Temperature (°C): {mlInputs.avg_temp.toFixed(1)}</label>
+                  <input type="range" min="-10" max="45" step="0.5" value={mlInputs.avg_temp} onChange={(e) => setMlInputs({ ...mlInputs, avg_temp: parseFloat(e.target.value) })} style={{ width: '100%' }} />
                 </div>
                 
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Temp Increase (°C): {mlInputs.tempIncrease}</label>
-                  <input type="range" min="0" max="5" step="0.1" value={mlInputs.tempIncrease} onChange={(e) => setMlInputs({...mlInputs, tempIncrease: parseFloat(e.target.value)})} style={{ width: '100%' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Rainfall Change (%): {mlInputs.rainfallChange}%</label>
-                  <input type="range" min="-50" max="50" step="1" value={mlInputs.rainfallChange} onChange={(e) => setMlInputs({...mlInputs, rainfallChange: parseInt(e.target.value)})} style={{ width: '100%' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Drought Risk</label>
-                  <select value={mlInputs.droughtSeverity} onChange={(e) => setMlInputs({...mlInputs, droughtSeverity: e.target.value})} style={{ width: '100%', padding: '6px', borderRadius: '4px' }}>
-                    <option>Low</option><option>Moderate</option><option>High</option><option>Very High</option><option>Extreme</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Heatwave Risk</label>
-                  <select value={mlInputs.heatwaveSeverity} onChange={(e) => setMlInputs({...mlInputs, heatwaveSeverity: e.target.value})} style={{ width: '100%', padding: '6px', borderRadius: '4px' }}>
-                    <option>Low</option><option>Moderate</option><option>High</option><option>Very High</option><option>Extreme</option>
-                  </select>
-                </div>
+                <button
+                  onClick={handlePredict}
+                  disabled={isPredicting}
+                  style={{ marginTop: '10px', padding: '10px', background: isPredicting ? '#374151' : '#10B981', color: 'white', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: isPredicting ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+                >
+                  {isPredicting ? <RefreshCw className="animate-spin" size={16} /> : <Terminal size={16} />}
+                  {isPredicting ? 'Running Models...' : 'Run AI Prediction'}
+                </button>
               </div>
             )}
           </>
@@ -482,59 +412,144 @@ export default function Dashboard() {
           </>
         ) : (
           <>
-            <h2 className="panel-title"><Terminal size={18} color="#10B981" /> ML Prediction Output</h2>
+            <h2 className="panel-title"><Terminal size={18} color="#10B981" /> AI Model Outputs</h2>
             {mlPrediction ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div className={`metric-card ${parseFloat(mlPrediction.yieldLoss) > 35 ? 'alert' : ''}`}>
-                  <div className="metric-label">Predicted Yield Loss</div>
-                  <div className="metric-value">{mlPrediction.yieldLoss}<span className="metric-unit">%</span></div>
-                </div>
-                <div className="metric-card" style={{ borderLeftColor: '#F59E0B' }}>
-                  <div className="metric-label">IPCC Risk Level</div>
-                  <div className="metric-value" style={{ fontSize: '1.25rem', marginTop: '6px', color: mlPrediction.futureRisk.includes('Catastrophic') ? '#EF4444' : 'inherit' }}>{mlPrediction.futureRisk}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
+                <div style={{ padding: '10px', background: 'var(--primary-light)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: '#10B981', margin: 0 }}>Model Consensus</h3>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
+                    Predicted yield (hg/ha) based on 3 parallel ML models for {mlInputs.item} in {mlInputs.year}.
+                  </p>
                 </div>
                 
-                {/* Peer-reviewed Parameter Breakdown */}
-                <div style={{ padding: '12px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ fontWeight: 700, color: 'var(--text-primary)', borderBottom: '1px solid #E2E8F0', paddingBottom: '4px', marginBottom: '4px' }}>ML PHYS-MODEL ESTIMATES:</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Crop Temp Sensitivity (avg):</span>
-                    <span style={{ fontWeight: 600 }}>-{mlPrediction.breakdown.avgSensitivity}%/°C</span>
+                {Object.entries(mlPrediction.models).map(([modelName, data]: any) => (
+                  <div key={modelName} className={`metric-card`} style={{ padding: '10px 14px', borderLeftColor: data.category === 'High' ? '#10B981' : data.category === 'Low' ? '#EF4444' : '#F59E0B' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div className="metric-label">{modelName}</div>
+                      <div style={{ 
+                        fontSize: '0.75rem', 
+                        padding: '2px 8px', 
+                        borderRadius: '12px', 
+                        fontWeight: 'bold',
+                        background: data.category === 'High' ? 'rgba(16, 185, 129, 0.2)' : data.category === 'Low' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                        color: data.category === 'High' ? '#34D399' : data.category === 'Low' ? '#F87171' : '#FBBF24'
+                      }}>
+                        {data.category} Yield
+                      </div>
+                    </div>
+                    <div className="metric-value">{data.yield.toLocaleString()}<span className="metric-unit"> hg/ha</span></div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Temperature Yield Shock:</span>
-                    <span style={{ fontWeight: 600, color: '#EF4444' }}>+{mlPrediction.breakdown.tempLoss}%</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Precipitation Stress Penalty:</span>
-                    <span style={{ fontWeight: 600, color: '#F59E0B' }}>+{mlPrediction.breakdown.rainLoss}%</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Extreme Weather Co-shocks:</span>
-                    <span style={{ fontWeight: 600, color: '#EF4444' }}>+{mlPrediction.breakdown.extremeLoss}%</span>
-                  </div>
+                ))}
+                
+                <div style={{ height: '220px', width: '100%', marginTop: '10px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={Object.entries(mlPrediction.models).map(([name, val]: any) => ({ name, yield: val.yield }))}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                      <XAxis dataKey="name" tick={{fill: 'var(--text-secondary)', fontSize: 12}} />
+                      <YAxis tick={{fill: 'var(--text-secondary)', fontSize: 12}} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: 'var(--surface-color)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }} 
+                        itemStyle={{ color: '#10B981' }}
+                      />
+                      <Bar dataKey="yield" fill="#10B981" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
+                
+                {/* Risk/Opportunity Matrix */}
+                {mlPrediction.risk_matrix && (
+                  <div style={{ marginTop: '14px', padding: '14px', borderRadius: '8px', border: `1px solid ${mlPrediction.risk_matrix.status === 'Opportunity' ? '#10B981' : '#EF4444'}`, background: mlPrediction.risk_matrix.status === 'Opportunity' ? 'rgba(16, 185, 129, 0.05)' : 'rgba(239, 68, 68, 0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      {mlPrediction.risk_matrix.status === 'Opportunity' ? <Activity size={18} color="#10B981" /> : <AlertTriangle size={18} color="#EF4444" />}
+                      <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: mlPrediction.risk_matrix.status === 'Opportunity' ? '#10B981' : '#EF4444', margin: 0 }}>
+                        {mlPrediction.risk_matrix.action}
+                      </h3>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', margin: '0 0 8px 0', lineHeight: '1.4' }}>
+                      {mlPrediction.risk_matrix.message}
+                    </p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)', borderTop: '1px solid var(--border-color)', paddingTop: '8px' }}>
+                      <span>Baseline: {mlPrediction.risk_matrix.baseline.toLocaleString()} hg/ha</span>
+                      <span style={{ fontWeight: 'bold', color: mlPrediction.risk_matrix.status === 'Opportunity' ? '#10B981' : '#EF4444' }}>
+                        {mlPrediction.risk_matrix.impact_usd > 0 ? '+' : ''}${mlPrediction.risk_matrix.impact_usd.toFixed(2)}/ha
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Historical Data & Impacts */}
+                {mlPrediction.historical_stats && mlPrediction.historical_stats.yearly_data && mlPrediction.historical_stats.yearly_data.length > 0 && (
+                  <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '14px', paddingBottom: '20px' }}>
+                    <div style={{ padding: '10px', background: 'var(--primary-light)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: '#10B981', margin: 0 }}>Historical Impact Analysis</h3>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
+                        Total Unique Crops Grown in {mlInputs.item} Region: <strong style={{ color: '#10B981' }}>{mlPrediction.historical_stats.total_crops}</strong>
+                      </p>
+                    </div>
 
-                <div style={{ padding: '12px', background: '#FEF2F2', borderLeft: '3px solid #EF4444', borderRadius: '4px', fontSize: '0.85rem' }}>
-                  <strong>Vulnerable Bio-Crops:</strong> {mlPrediction.affected}
-                </div>
+                    {/* Yield vs Pesticides over Time */}
+                    <div style={{ padding: '10px', background: 'var(--surface-color)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <h4 style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '8px' }}>Area vs Pesticides & Yield Impact</h4>
+                      <div style={{ height: '180px', width: '100%' }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <ComposedChart data={mlPrediction.historical_stats.yearly_data}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                            <XAxis dataKey="year" tick={{fill: 'var(--text-secondary)', fontSize: 10}} />
+                            <YAxis yAxisId="left" tick={{fill: '#10B981', fontSize: 10}} width={40} />
+                            <YAxis yAxisId="right" orientation="right" tick={{fill: '#EF4444', fontSize: 10}} width={40} />
+                            <Tooltip contentStyle={{ backgroundColor: 'var(--surface-color)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }} />
+                            <Legend wrapperStyle={{ fontSize: '10px' }} />
+                            <Area yAxisId="left" type="monotone" dataKey="yield" name="Yield (hg/ha)" fill="#10B981" stroke="#10B981" fillOpacity={0.2} />
+                            <Line yAxisId="right" type="monotone" dataKey="pesticides" name="Pesticides (t)" stroke="#EF4444" strokeWidth={2} />
+                          </ComposedChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Area Average Pesticides */}
+                    <div style={{ padding: '10px', background: 'var(--surface-color)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <h4 style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '8px' }}>Area & Average Pesticides Usage</h4>
+                      <div style={{ height: '150px', width: '100%' }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={mlPrediction.historical_stats.yearly_data}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                            <XAxis dataKey="year" tick={{fill: 'var(--text-secondary)', fontSize: 10}} />
+                            <YAxis tick={{fill: '#F59E0B', fontSize: 10}} width={40} />
+                            <Tooltip contentStyle={{ backgroundColor: 'var(--surface-color)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }} />
+                            <Bar dataKey="pesticides" name="Avg Pesticides (Tonnes)" fill="#F59E0B" radius={[2, 2, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Rainfall Histogram */}
+                    <div style={{ padding: '10px', background: 'var(--surface-color)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <h4 style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '8px' }}>Histogram of Average Rainfall</h4>
+                      <div style={{ height: '150px', width: '100%' }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={mlPrediction.historical_stats.yearly_data}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                            <XAxis dataKey="year" tick={{fill: 'var(--text-secondary)', fontSize: 10}} />
+                            <YAxis tick={{fill: '#3B82F6', fontSize: 10}} width={40} />
+                            <Tooltip contentStyle={{ backgroundColor: 'var(--surface-color)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }} />
+                            <Bar dataKey="rainfall" name="Avg Rainfall (mm)" fill="#3B82F6" radius={[2, 2, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                  </div>
+                )}
               </div>
             ) : (
               <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                Select a country to view machine learning analysis.
+                Select a country and run the AI prediction to view crop yield forecasts.
               </div>
             )}
           </>
         )}
 
-        <h2 className="panel-title" style={{ marginTop: 'auto' }}><Activity size={18} color="var(--primary-accent)" /> Event Logs</h2>
-        <div style={{ flex: 1, background: '#1E293B', borderRadius: '8px', padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', minHeight: '150px' }}>
-          {logs.map((log, i) => (
-            <div key={i} className="log-entry" style={{ color: log.type === 'warn' ? '#FBBF24' : '#E2E8F0', background: 'transparent', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-              <span style={{ color: '#60A5FA', marginRight: '10px' }}>[{log.time}]</span>{log.msg}
-            </div>
-          ))}
-        </div>
+
       </aside>
     </div>
   );
