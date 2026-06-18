@@ -40,8 +40,8 @@
     "Prediction 2030 km2": 12232810.6,
     "Prediction 2050 km2": 3536393.1,
     "Prediction 2100 km2": 4002884.9,
-    "latitude": -90,
-    "longitude": 0
+    "latitude": -43.3047861,
+    "longitude": 170.7684319
   },
   {
     "Country Name": "Canada",
@@ -62,8 +62,8 @@
     "Prediction 2030 km2": 177799.5,
     "Prediction 2050 km2": 98298.1,
     "Prediction 2100 km2": 57270.5,
-    "latitude": 60,
-    "longitude": -95
+    "latitude": 52.1576195,
+    "longitude": -117.3723145
   },
   {
     "Country Name": "Russia",
@@ -84,8 +84,8 @@
     "Prediction 2030 km2": 50634.1,
     "Prediction 2050 km2": 22100.6,
     "Prediction 2100 km2": 4673.5,
-    "latitude": 60,
-    "longitude": 100
+    "latitude": 38.7971086,
+    "longitude": 72.23335
   },
   {
     "Country Name": "United States",
@@ -106,8 +106,8 @@
     "Prediction 2030 km2": 63628.7,
     "Prediction 2050 km2": 50777,
     "Prediction 2100 km2": 6409.8,
-    "latitude": 38,
-    "longitude": -97
+    "latitude": 60.3317843,
+    "longitude": -139.3973351
   },
   {
     "Country Name": "China",
@@ -128,8 +128,8 @@
     "Prediction 2030 km2": 38227.5,
     "Prediction 2050 km2": 25659.3,
     "Prediction 2100 km2": 6435.9,
-    "latitude": 35,
-    "longitude": 105
+    "latitude": 43.1101887,
+    "longitude": 86.8111676
   },
   {
     "Country Name": "Iceland",
@@ -150,8 +150,8 @@
     "Prediction 2030 km2": 8099.3,
     "Prediction 2050 km2": 3151.8,
     "Prediction 2100 km2": 3663.2,
-    "latitude": 65,
-    "longitude": -18
+    "latitude": 64.3829655,
+    "longitude": -16.9257571
   },
   {
     "Country Name": "Norway",
@@ -172,8 +172,8 @@
     "Prediction 2030 km2": 2289.6,
     "Prediction 2050 km2": 1257.1,
     "Prediction 2100 km2": 719.6,
-    "latitude": 62,
-    "longitude": 10
+    "latitude": 61.6799348,
+    "longitude": 7.0332413
   },
   {
     "Country Name": "Switzerland",
@@ -194,8 +194,8 @@
     "Prediction 2030 km2": 805,
     "Prediction 2050 km2": 280,
     "Prediction 2100 km2": 65.5,
-    "latitude": 47,
-    "longitude": 8
+    "latitude": 46.4516323,
+    "longitude": 8.0775081
   },
   {
     "Country Name": "Austria",
@@ -216,8 +216,8 @@
     "Prediction 2030 km2": 384.7,
     "Prediction 2050 km2": 216.7,
     "Prediction 2100 km2": 24,
-    "latitude": 47.3333,
-    "longitude": 13.3333
+    "latitude": 47.0847867,
+    "longitude": 12.7215572
   },
   {
     "Country Name": "France",
@@ -238,8 +238,8 @@
     "Prediction 2030 km2": 230.7,
     "Prediction 2050 km2": 147.9,
     "Prediction 2100 km2": 93.7,
-    "latitude": 46,
-    "longitude": 2
+    "latitude": 45.9136531,
+    "longitude": 6.9386736
   },
   {
     "Country Name": "Italy",
@@ -260,8 +260,8 @@
     "Prediction 2030 km2": 226.2,
     "Prediction 2050 km2": 232.4,
     "Prediction 2100 km2": 119.4,
-    "latitude": 42.8333,
-    "longitude": 12.8333
+    "latitude": 46.451382,
+    "longitude": 10.7209334
   },
   {
     "Country Name": "Germany",
@@ -304,8 +304,8 @@
     "Prediction 2030 km2": 0.4,
     "Prediction 2050 km2": 0.3,
     "Prediction 2100 km2": 0.2,
-    "latitude": 40,
-    "longitude": -4
+    "latitude": 42.6387479,
+    "longitude": 0.6494338
   },
   {
     "Country Name": "Sweden",
@@ -326,8 +326,8 @@
     "Prediction 2030 km2": 194.7,
     "Prediction 2050 km2": 82.7,
     "Prediction 2100 km2": 8.1,
-    "latitude": 62,
-    "longitude": 15
+    "latitude": 67.9060404,
+    "longitude": 18.5456861
   },
   {
     "Country Name": "Finland",
@@ -370,8 +370,8 @@
     "Prediction 2030 km2": 1012.7,
     "Prediction 2050 km2": 378.4,
     "Prediction 2100 km2": 60.3,
-    "latitude": -41,
-    "longitude": 174
+    "latitude": -43.5741261,
+    "longitude": 170.2274491
   },
   {
     "Country Name": "Argentina",
@@ -392,8 +392,8 @@
     "Prediction 2030 km2": 20798.7,
     "Prediction 2050 km2": 7019.6,
     "Prediction 2100 km2": 1989.1,
-    "latitude": -34,
-    "longitude": -64
+    "latitude": -50.5759843,
+    "longitude": -73.2289869
   },
   {
     "Country Name": "Chile",
@@ -414,8 +414,8 @@
     "Prediction 2030 km2": 15556.6,
     "Prediction 2050 km2": 5458.8,
     "Prediction 2100 km2": 7065.2,
-    "latitude": -30,
-    "longitude": -71
+    "latitude": -49.2854225,
+    "longitude": -73.5410239
   },
   {
     "Country Name": "Peru",
@@ -436,8 +436,8 @@
     "Prediction 2030 km2": 1065.6,
     "Prediction 2050 km2": 410.2,
     "Prediction 2100 km2": 217.6,
-    "latitude": -10,
-    "longitude": -76
+    "latitude": -13.9252783,
+    "longitude": -70.8204302
   },
   {
     "Country Name": "Bolivia",
@@ -480,8 +480,8 @@
     "Prediction 2030 km2": 48.4,
     "Prediction 2050 km2": 50.1,
     "Prediction 2100 km2": 3.7,
-    "latitude": -2,
-    "longitude": -77.5
+    "latitude": -1.4650319,
+    "longitude": -78.8142788
   },
   {
     "Country Name": "Colombia",
@@ -546,8 +546,8 @@
     "Prediction 2030 km2": 24119.3,
     "Prediction 2050 km2": 15584.1,
     "Prediction 2100 km2": 1708,
-    "latitude": 20,
-    "longitude": 77
+    "latitude": 35.4339581,
+    "longitude": 77.0883677
   },
   {
     "Country Name": "Pakistan",
@@ -568,8 +568,8 @@
     "Prediction 2030 km2": 11454.1,
     "Prediction 2050 km2": 7777.9,
     "Prediction 2100 km2": 3053.4,
-    "latitude": 30,
-    "longitude": 70
+    "latitude": 35.7106418,
+    "longitude": 76.5531423
   },
   {
     "Country Name": "Nepal",
@@ -590,8 +590,8 @@
     "Prediction 2030 km2": 2415.2,
     "Prediction 2050 km2": 1474.3,
     "Prediction 2100 km2": 940.1,
-    "latitude": 28,
-    "longitude": 84
+    "latitude": 27.9692985,
+    "longitude": 86.8285364
   },
   {
     "Country Name": "Bhutan",
@@ -656,8 +656,8 @@
     "Prediction 2030 km2": 9837.1,
     "Prediction 2050 km2": 6705.3,
     "Prediction 2100 km2": 982.6,
-    "latitude": 39,
-    "longitude": 71
+    "latitude": 38.7971086,
+    "longitude": 72.23335
   },
   {
     "Country Name": "Kazakhstan",
@@ -678,8 +678,8 @@
     "Prediction 2030 km2": 1321.6,
     "Prediction 2050 km2": 645.8,
     "Prediction 2100 km2": 582.1,
-    "latitude": 48,
-    "longitude": 68
+    "latitude": 43.0441985,
+    "longitude": 77.0810846
   },
   {
     "Country Name": "Uzbekistan",
@@ -700,8 +700,8 @@
     "Prediction 2030 km2": 1049.2,
     "Prediction 2050 km2": 428.1,
     "Prediction 2100 km2": 335.8,
-    "latitude": 41,
-    "longitude": 64
+    "latitude": 39.5234253,
+    "longitude": 70.6760324
   },
   {
     "Country Name": "Afghanistan",
@@ -832,8 +832,8 @@
     "Prediction 2030 km2": 0.3,
     "Prediction 2050 km2": 0.1,
     "Prediction 2100 km2": 0.1,
-    "latitude": 1,
-    "longitude": 38
+    "latitude": -0.1563829,
+    "longitude": 37.3153279
   },
   {
     "Country Name": "Uganda",
@@ -854,8 +854,8 @@
     "Prediction 2030 km2": 0.7,
     "Prediction 2050 km2": 0.5,
     "Prediction 2100 km2": 0.2,
-    "latitude": 1,
-    "longitude": 32
+    "latitude": 0.3655504,
+    "longitude": 29.9062973
   },
   {
     "Country Name": "Democratic Republic of Congo",
@@ -876,8 +876,8 @@
     "Prediction 2030 km2": 0.6,
     "Prediction 2050 km2": 0.3,
     "Prediction 2100 km2": 0.3,
-    "latitude": 0,
-    "longitude": 25
+    "latitude": 42.6614892,
+    "longitude": -82.9041807
   },
   {
     "Country Name": "Ethiopia",
@@ -1030,8 +1030,8 @@
     "Prediction 2030 km2": 1.4,
     "Prediction 2050 km2": 1.2,
     "Prediction 2100 km2": 0.6,
-    "latitude": -6,
-    "longitude": 147
+    "latitude": -4.0826274,
+    "longitude": 137.1816029
   },
   {
     "Country Name": "Mexico",
@@ -1228,8 +1228,8 @@
     "Prediction 2030 km2": 12232810.6,
     "Prediction 2050 km2": 3536393.1,
     "Prediction 2100 km2": 4002884.9,
-    "latitude": -90,
-    "longitude": 0
+    "latitude": -43.3047861,
+    "longitude": 170.7684319
   },
   {
     "Country Name": "Antarctica - West Antarctica",
@@ -1250,8 +1250,8 @@
     "Prediction 2030 km2": 12232810.6,
     "Prediction 2050 km2": 3536393.1,
     "Prediction 2100 km2": 4002884.9,
-    "latitude": -90,
-    "longitude": 0
+    "latitude": -43.3047861,
+    "longitude": 170.7684319
   },
   {
     "Country Name": "Antarctica - Antarctic Peninsula",
@@ -1272,8 +1272,8 @@
     "Prediction 2030 km2": 12232810.6,
     "Prediction 2050 km2": 3536393.1,
     "Prediction 2100 km2": 4002884.9,
-    "latitude": -90,
-    "longitude": 0
+    "latitude": -43.3047861,
+    "longitude": 170.7684319
   },
   {
     "Country Name": "Antarctica - Ross Ice Shelf",
@@ -1294,8 +1294,8 @@
     "Prediction 2030 km2": 12232810.6,
     "Prediction 2050 km2": 3536393.1,
     "Prediction 2100 km2": 4002884.9,
-    "latitude": -90,
-    "longitude": 0
+    "latitude": -43.3047861,
+    "longitude": 170.7684319
   },
   {
     "Country Name": "Antarctica - Filchner-Ronne Shelf",
@@ -1316,8 +1316,8 @@
     "Prediction 2030 km2": 12232810.6,
     "Prediction 2050 km2": 3536393.1,
     "Prediction 2100 km2": 4002884.9,
-    "latitude": -90,
-    "longitude": 0
+    "latitude": -43.3047861,
+    "longitude": 170.7684319
   },
   {
     "Country Name": "Canada - British Columbia",
@@ -1338,8 +1338,8 @@
     "Prediction 2030 km2": 177799.5,
     "Prediction 2050 km2": 98298.1,
     "Prediction 2100 km2": 57270.5,
-    "latitude": 60,
-    "longitude": -95
+    "latitude": 47.9617476,
+    "longitude": -121.3489825
   },
   {
     "Country Name": "Canada - Yukon Territory",
@@ -1360,8 +1360,8 @@
     "Prediction 2030 km2": 177799.5,
     "Prediction 2050 km2": 98298.1,
     "Prediction 2100 km2": 57270.5,
-    "latitude": 60,
-    "longitude": -95
+    "latitude": 47.9617476,
+    "longitude": -121.3489825
   },
   {
     "Country Name": "Canada - Alberta Rockies",
@@ -1382,8 +1382,8 @@
     "Prediction 2030 km2": 177799.5,
     "Prediction 2050 km2": 98298.1,
     "Prediction 2100 km2": 57270.5,
-    "latitude": 60,
-    "longitude": -95
+    "latitude": 47.9617476,
+    "longitude": -121.3489825
   },
   {
     "Country Name": "Canada - Baffin Island",
@@ -1404,8 +1404,8 @@
     "Prediction 2030 km2": 177799.5,
     "Prediction 2050 km2": 98298.1,
     "Prediction 2100 km2": 57270.5,
-    "latitude": 60,
-    "longitude": -95
+    "latitude": 47.9617476,
+    "longitude": -121.3489825
   },
   {
     "Country Name": "Canada - Ellesmere Island",
@@ -1426,8 +1426,8 @@
     "Prediction 2030 km2": 177799.5,
     "Prediction 2050 km2": 98298.1,
     "Prediction 2100 km2": 57270.5,
-    "latitude": 60,
-    "longitude": -95
+    "latitude": 47.9617476,
+    "longitude": -121.3489825
   },
   {
     "Country Name": "Russia - Novaya Zemlya",
@@ -1448,8 +1448,8 @@
     "Prediction 2030 km2": 50634.1,
     "Prediction 2050 km2": 22100.6,
     "Prediction 2100 km2": 4673.5,
-    "latitude": 60,
-    "longitude": 100
+    "latitude": 38.7971086,
+    "longitude": 72.23335
   },
   {
     "Country Name": "Russia - Severnaya Zemlya",
@@ -1470,8 +1470,8 @@
     "Prediction 2030 km2": 50634.1,
     "Prediction 2050 km2": 22100.6,
     "Prediction 2100 km2": 4673.5,
-    "latitude": 60,
-    "longitude": 100
+    "latitude": 38.7971086,
+    "longitude": 72.23335
   },
   {
     "Country Name": "Russia - Franz Josef Land",
@@ -1492,8 +1492,8 @@
     "Prediction 2030 km2": 50634.1,
     "Prediction 2050 km2": 22100.6,
     "Prediction 2100 km2": 4673.5,
-    "latitude": 60,
-    "longitude": 100
+    "latitude": 38.7971086,
+    "longitude": 72.23335
   },
   {
     "Country Name": "Russia - Kamchatka",
@@ -1514,8 +1514,8 @@
     "Prediction 2030 km2": 50634.1,
     "Prediction 2050 km2": 22100.6,
     "Prediction 2100 km2": 4673.5,
-    "latitude": 60,
-    "longitude": 100
+    "latitude": 38.7971086,
+    "longitude": 72.23335
   },
   {
     "Country Name": "Russia - Altai Mountains",
@@ -1536,8 +1536,8 @@
     "Prediction 2030 km2": 50634.1,
     "Prediction 2050 km2": 22100.6,
     "Prediction 2100 km2": 4673.5,
-    "latitude": 60,
-    "longitude": 100
+    "latitude": 38.7971086,
+    "longitude": 72.23335
   },
   {
     "Country Name": "China - Tibetan Plateau North",
@@ -1558,8 +1558,8 @@
     "Prediction 2030 km2": 38227.5,
     "Prediction 2050 km2": 25659.3,
     "Prediction 2100 km2": 6435.9,
-    "latitude": 35,
-    "longitude": 105
+    "latitude": 43.1101887,
+    "longitude": 86.8111676
   },
   {
     "Country Name": "China - Tibetan Plateau South",
@@ -1580,8 +1580,8 @@
     "Prediction 2030 km2": 38227.5,
     "Prediction 2050 km2": 25659.3,
     "Prediction 2100 km2": 6435.9,
-    "latitude": 35,
-    "longitude": 105
+    "latitude": 43.1101887,
+    "longitude": 86.8111676
   },
   {
     "Country Name": "China - Tien Shan",
@@ -1602,8 +1602,8 @@
     "Prediction 2030 km2": 38227.5,
     "Prediction 2050 km2": 25659.3,
     "Prediction 2100 km2": 6435.9,
-    "latitude": 35,
-    "longitude": 105
+    "latitude": 43.1101887,
+    "longitude": 86.8111676
   },
   {
     "Country Name": "China - Qilian Shan",
@@ -1624,8 +1624,8 @@
     "Prediction 2030 km2": 38227.5,
     "Prediction 2050 km2": 25659.3,
     "Prediction 2100 km2": 6435.9,
-    "latitude": 35,
-    "longitude": 105
+    "latitude": 43.1101887,
+    "longitude": 86.8111676
   },
   {
     "Country Name": "China - Hengduan Mountains",
@@ -1646,7 +1646,7 @@
     "Prediction 2030 km2": 38227.5,
     "Prediction 2050 km2": 25659.3,
     "Prediction 2100 km2": 6435.9,
-    "latitude": 35,
-    "longitude": 105
+    "latitude": 43.1101887,
+    "longitude": 86.8111676
   }
 ]

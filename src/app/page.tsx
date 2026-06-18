@@ -19,7 +19,7 @@ glacierDataset.forEach((d: any, index: number) => {
     else if (statusStr.toLowerCase().includes('accelerating') || statusStr.toLowerCase().includes('declining')) salStatus = 'warning';
 
     GLACIERS[id] = {
-      id, name: d['Country Name'], coords: [d.longitude, d.latitude], zoom: 5,
+      id, name: d['Country Name'], coords: [d.longitude, d.latitude], zoom: 9,
       metrics: {
         mass: (d['Annual Ice Loss Tons'] ? (d['Annual Ice Loss Tons'] / 1e9).toFixed(2) : "N/A"),
         vol: d['Total Glacier Area km2'] || "N/A", volLabel: "km²",
@@ -140,7 +140,8 @@ export default function Dashboard() {
         avg_temp: mlInputs.avg_temp
       };
       
-      const res = await fetch('http://localhost:8867/execute', {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8867';
+      const res = await fetch(`${backendUrl}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
