@@ -446,6 +446,11 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div className="metric-value">{data.yield.toLocaleString()}<span className="metric-unit"> hg/ha</span></div>
+                        {data.analysis && (
+                          <div style={{ marginTop: '12px', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5', borderTop: '1px dashed var(--border-color)', paddingTop: '12px' }}>
+                            {data.analysis}
+                          </div>
+                        )}
                       </div>
                     ))}
                     
