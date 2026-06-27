@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
-from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 
 df = pd.read_csv('yield_df.csv').drop(columns=['Unnamed: 0'], errors='ignore')
@@ -14,15 +14,13 @@ df = pd.read_csv('yield_df.csv').drop(columns=['Unnamed: 0'], errors='ignore')
 X = df.drop(columns=['hg/ha_yield', 'category'], errors='ignore')
 y = df['hg/ha_yield']
 
-label_encoder_area = LabelEncoder()
-label_encoder_item = LabelEncoder()
-
-X['Area'] = label_encoder_area.fit_transform(X['Area'])
-X['Item'] = label_encoder_item.fit_transform(X['Item'])
-
 X['avg_temp'] = pd.to_numeric(X['avg_temp'], errors='coerce')
 X = X.dropna(subset=['avg_temp'])
 y = y[X.index]
+
+ohe = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
+encoded_cols = pd.DataFrame(ohe.fit_transform(X[['Area', 'Item']]), columns=ohe.get_feature_names_out(), index=X.index)
+X = pd.concat([X.drop(columns=['Area', 'Item']), encoded_cols], axis=1)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -46,8 +44,8 @@ else:
 svm_preds = svm.predict(X_test_scaled)
 print(f"SVM - R2: {r2_score(y_test, svm_preds):.4f}")
 
-print("Training & Evaluating Naive Bayes...")
-nb = GaussianNB()
-nb.fit(X_train_scaled, y_train)
-nb_preds = nb.predict(X_test_scaled)
-print(f"Naive Bayes - R2: {r2_score(y_test, nb_preds):.4f}")
+print("Training & Evaluating Decision Tree...")
+dt = DecisionTreeRegressor(random_state=42)
+dt.fit(X_train_scaled, y_train)
+dt_preds = dt.predict(X_test_scaled)
+print(f"Decision Tree - R2: {r2_score(y_test, dt_preds):.4f}")

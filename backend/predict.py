@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.svm import SVR
 # Load and preprocess your dataset
@@ -11,16 +11,13 @@ df = pd.read_csv('yield_df.csv').drop(columns=['Unnamed: 0'], errors='ignore')
 X = df.drop(columns=['hg/ha_yield', 'category'], errors='ignore')
 y = df['hg/ha_yield']  # Target (Yield)
 
-# Encode categorical variables (Area and Item)
-label_encoder_area = LabelEncoder()
-label_encoder_item = LabelEncoder()
-
-X['Area'] = label_encoder_area.fit_transform(X['Area'])
-X['Item'] = label_encoder_item.fit_transform(X['Item'])
-
-# Ensure avg_temp is numeric
 X['avg_temp'] = pd.to_numeric(X['avg_temp'], errors='coerce')
 X = X.dropna(subset=['avg_temp'])  # Drop rows with missing 'avg_temp'
+y = y[X.index]
+
+ohe = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
+encoded_cols = pd.DataFrame(ohe.fit_transform(X[['Area', 'Item']]), columns=ohe.get_feature_names_out(), index=X.index)
+X = pd.concat([X.drop(columns=['Area', 'Item']), encoded_cols], axis=1)
 
 # Split data into train and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -42,14 +39,16 @@ rf_path = os.path.join(MODEL_DIR, 'rf_model.joblib')
 svm_path = os.path.join(MODEL_DIR, 'svm_model.joblib')
 gb_path = os.path.join(MODEL_DIR, 'gb_model.joblib')
 scaler_path = os.path.join(MODEL_DIR, 'scaler.joblib')
+encoder_path = os.path.join(MODEL_DIR, 'encoder.joblib')
 
 # Check if models exist
-if os.path.exists(rf_path) and os.path.exists(svm_path) and os.path.exists(gb_path) and os.path.exists(scaler_path):
+if os.path.exists(rf_path) and os.path.exists(svm_path) and os.path.exists(gb_path) and os.path.exists(scaler_path) and os.path.exists(encoder_path):
     print("Loading cached models...")
     rf_model = joblib.load(rf_path)
     svm_model = joblib.load(svm_path)
     gb_model = joblib.load(gb_path)
     scaler = joblib.load(scaler_path)
+    ohe = joblib.load(encoder_path)
 else:
     # Train the models
     print("Initializing models...")
@@ -74,6 +73,7 @@ else:
     joblib.dump(svm_model, svm_path)
     joblib.dump(gb_model, gb_path)
     joblib.dump(scaler, scaler_path)
+    joblib.dump(ohe, encoder_path)
 
 
 # Function to categorize predicted yield into 'Low', 'Medium', 'High'
@@ -85,16 +85,7 @@ def categorize_yield(yield_value, bins):
     else:
         return 'High'
 
-# Helper function to handle unseen labels in new data
-def handle_unseen_labels(data, encoder, column_name):
-    for val in data[column_name]:
-        if val not in encoder.classes_:
-            encoder.classes_ = np.append(encoder.classes_, val)
-    return encoder.transform(data[column_name])
 
-# Decode function to convert encoded labels back to original strings
-def decode_labels(encoded_value, encoder):
-    return encoder.inverse_transform([encoded_value])[0]
 
 # Prediction function
 def predict_yield(area, item, year, avg_rainfall, pesticides, avg_temp):
@@ -108,12 +99,15 @@ def predict_yield(area, item, year, avg_rainfall, pesticides, avg_temp):
         'avg_temp': [avg_temp]
     })
 
-    # Handle unseen labels in 'Area' and 'Item'
-    new_data['Area'] = handle_unseen_labels(new_data, label_encoder_area, 'Area')
-    new_data['Item'] = handle_unseen_labels(new_data, label_encoder_item, 'Item')
+    # Encode categorical features
+    encoded_new = pd.DataFrame(ohe.transform(new_data[['Area', 'Item']]), columns=ohe.get_feature_names_out())
+    new_data_encoded = pd.concat([new_data.drop(columns=['Area', 'Item']), encoded_new], axis=1)
+    
+    # Reorder columns to match training data
+    new_data_encoded = new_data_encoded[X.columns]
 
     # Standardize the new data
-    new_data_scaled = scaler.transform(new_data)
+    new_data_scaled = scaler.transform(new_data_encoded)
 
     # Make predictions with the models
     rf_prediction = rf_model.predict(new_data_scaled)[0].item()
@@ -121,18 +115,18 @@ def predict_yield(area, item, year, avg_rainfall, pesticides, avg_temp):
     gb_prediction = gb_model.predict(new_data_scaled)[0].item()
 
     # Define bins for categorizing the yield predictions
-    min_value = y.min()
-    max_value = y.max()
-    bins = [min_value, (min_value + max_value) / 3, 2 * (min_value + max_value) / 3, max_value]
+    q33 = np.percentile(y, 33.33)
+    q66 = np.percentile(y, 66.67)
+    bins = [-np.inf, q33, q66, np.inf]
 
     # Categorize the predictions
     rf_category = categorize_yield(rf_prediction, bins)
     svm_category = categorize_yield(svm_prediction, bins)
     gb_category = categorize_yield(gb_prediction, bins)
 
-    # Decode the labels back to original strings
-    decoded_area = decode_labels(new_data['Area'][0], label_encoder_area)
-    decoded_item = decode_labels(new_data['Item'][0], label_encoder_item)
+    # Use the original string labels
+    decoded_area = area
+    decoded_item = item
 
     # Load the existing CSV to get the last index
     try:
